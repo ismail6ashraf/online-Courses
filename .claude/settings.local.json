@@ -1,9 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "PowerShell(& \"C:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe\" -u root -h 127.0.0.1 -P 3306 --connect-timeout=5 -e \"SELECT 1;\" 2>&1)",
-      "PowerShell(& \"C:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe\" -u root -h 127.0.0.1 -P 3306 -e \"SELECT User, Host, plugin, authentication_string FROM mysql.user WHERE User='root';\" 2>&1)",
-      "PowerShell(& \"C:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe\" -u root -h 127.0.0.1 -P 3306 -e \"SELECT VERSION\\(\\); SHOW DATABASES;\" 2>&1)"
-    ]
-  }
-}
