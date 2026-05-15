@@ -51,8 +51,11 @@ class SessionController extends Controller
         $this->authorizeSession($session);
 
         $session->load([
-            'course', 'attendances.user', 'behaviorIncidents',
-            'deadAirLogs', 'instructorTasks',
+            'course',
+            'attendances.user',
+            'behaviorIncidents',
+            'deadAirLogs',
+            'instructorTasks',
         ]);
 
         return view('instructor.sessions.show', compact('session'));
@@ -123,5 +126,14 @@ class SessionController extends Controller
     private function authorizeSession(ClassSession $session): void
     {
         abort_unless($session->instructor_id === Auth::id(), 403);
+    }
+
+    public function destroy(ClassSession $session)
+    {
+        $session->delete();
+
+        return redirect()
+            ->route('instructor.sessions.index')
+            ->with('success', 'Session deleted successfully.');
     }
 }

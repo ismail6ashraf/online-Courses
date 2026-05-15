@@ -34,11 +34,11 @@ class User extends Authenticatable
     public function coursesAsInstructor() { return $this->hasMany(Course::class, 'instructor_id'); }
     public function enrolledCourses()     { return $this->belongsToMany(Course::class, 'course_students', 'student_id'); }
     public function classSessionsAsInstructor() { return $this->hasMany(ClassSession::class, 'instructor_id'); }
-    public function attendances()         { return $this->hasMany(AttendanceLog::class); }
     public function tasks()               { return $this->hasMany(InstructorTask::class, 'instructor_id'); }
     public function alerts()              { return $this->hasMany(Alert::class, 'target_user_id'); }
     public function speechLogs()          { return $this->hasMany(SpeechLog::class, 'speaker_id'); }
     public function behaviorIncidents()   { return $this->hasMany(BehaviorIncident::class); }
     public function dataLeakageIncidents(){ return $this->hasMany(DataLeakageIncident::class); }
     public function reports()             { return $this->hasMany(Report::class, 'generated_by'); }
+    public function attendances(){ return $this->hasMany(Attendance::class, 'student_id'); }
 }

@@ -76,6 +76,9 @@ Route::middleware(['auth', 'role:instructor'])->prefix('instructor')->name('inst
     Route::post('/sessions/{session}/start', [Instructor\SessionController::class, 'start'])->name('sessions.start');
     Route::post('/sessions/{session}/end', [Instructor\SessionController::class, 'end'])->name('sessions.end');
     Route::get('/sessions/{session}/live', [Instructor\SessionController::class, 'live'])->name('sessions.live');
+    Route::delete('/sessions/{session}', [Instructor\SessionController::class, 'destroy'])
+        ->name('sessions.destroy');
+
 
     Route::get('/assessments', [Instructor\AssessmentController::class, 'index'])->name('assessments.index');
     Route::get('/assessments/create', [Instructor\AssessmentController::class, 'create'])->name('assessments.create');

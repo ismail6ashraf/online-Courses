@@ -33,7 +33,7 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended($this->dashboardRoute());
+        return redirect()->intended(route($this->dashboardRoute()));
     }
 
     public function showRegister()

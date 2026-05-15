@@ -29,7 +29,6 @@ class ClassSession extends Model
 
     public function course()      { return $this->belongsTo(Course::class); }
     public function instructor()  { return $this->belongsTo(User::class, 'instructor_id'); }
-    public function attendances() { return $this->hasMany(AttendanceLog::class); }
     public function speechLogs()  { return $this->hasMany(SpeechLog::class); }
     public function chatMessages(){ return $this->hasMany(ChatMessage::class); }
     public function deadAirLogs() { return $this->hasMany(DeadAirLog::class); }
@@ -41,4 +40,5 @@ class ClassSession extends Model
     public function instructorTasks() { return $this->hasMany(InstructorTask::class); }
 
     public function isLive(): bool { return $this->status === 'live'; }
+    public function attendances() { return $this->hasMany(Attendance::class, 'session_id'); }
 }
