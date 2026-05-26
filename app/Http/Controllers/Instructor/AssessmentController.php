@@ -8,12 +8,16 @@ use App\Models\AssessmentResponse;
 use App\Models\ClassSession;
 use App\Models\Course;
 use App\Services\AssessmentTaskService;
+use App\Services\StudentNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class AssessmentController extends Controller
 {
-    public function __construct(private AssessmentTaskService $taskService) {}
+    public function __construct(
+        private AssessmentTaskService $taskService,
+        private StudentNotificationService $studentNotifications,
+    ) {}
 
     public function index()
     {
@@ -68,6 +72,8 @@ class AssessmentController extends Controller
                 'sort_order' => $index,
             ]);
         }
+
+        $this->studentNotifications->notifyAssessmentPublished($assessment);
 
         return redirect()->route('instructor.assessments.show', $assessment)
             ->with('success', 'Assessment created.');

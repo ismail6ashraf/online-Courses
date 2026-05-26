@@ -5,7 +5,10 @@
 
 @section('content')
 
+
     <div class="row g-3 mb-4">
+
+        {{-- Enrolled Courses --}}
         <div class="col-sm-4">
             <div class="stat-card" style="background:linear-gradient(135deg,#4f46e5,#7c3aed)">
                 <div class="d-flex justify-content-between align-items-start">
@@ -17,6 +20,8 @@
                 </div>
             </div>
         </div>
+
+        {{-- Upcoming Sessions --}}
         <div class="col-sm-4">
             <div class="stat-card" style="background:linear-gradient(135deg,#0891b2,#0284c7)">
                 <div class="d-flex justify-content-between align-items-start">
@@ -28,6 +33,8 @@
                 </div>
             </div>
         </div>
+
+        {{-- Attendance Rate --}}
         <div class="col-sm-4">
             <div class="stat-card" style="background:linear-gradient(135deg,#059669,#10b981)">
                 <div class="d-flex justify-content-between align-items-start">
@@ -39,7 +46,10 @@
                 </div>
             </div>
         </div>
+
     </div>
+
+
     <div class="card mb-4">
         <div class="card-header bg-transparent border-0 pt-3">
             <h6 class="mb-0 fw-semibold">Available Courses</h6>
@@ -60,6 +70,9 @@
                         <button class="btn btn-sm btn-primary">
                             Enroll
                         </button>
+                        <button class="btn btn-sm btn-primary">
+                            <a style="text-decoration: none; color: white;" href="{{ route('student.courses.details', $course->id) }}">View Details</a>
+                        </button>
                     </form>
                 </div>
             @empty
@@ -69,6 +82,8 @@
             @endforelse
         </div>
     </div>
+
+
     <div class="row g-3">
         <div class="col-lg-7">
             <div class="card">
@@ -136,4 +151,5 @@
             </div>
         </div>
     </div>
+
 @endsection

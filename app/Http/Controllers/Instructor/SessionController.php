@@ -5,11 +5,15 @@ namespace App\Http\Controllers\Instructor;
 use App\Http\Controllers\Controller;
 use App\Models\ClassSession;
 use App\Models\Course;
+use App\Models\Report;
+use App\Services\ReportGeneratorService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class SessionController extends Controller
 {
+    public function __construct(private ReportGeneratorService $reportGenerator) {}
+
     public function index()
     {
         $sessions = ClassSession::where('instructor_id', Auth::id())
@@ -112,7 +116,18 @@ class SessionController extends Controller
             'duration_minutes' => $duration,
         ]);
 
-        return redirect()->route('instructor.sessions.show', $session)->with('success', 'Session ended.');
+        $session->refresh();
+
+        $report = Report::where('type', 'session')
+            ->where('class_session_id', $session->id)
+            ->first();
+
+        if (!$report) {
+            $report = $this->reportGenerator->generateSessionReport($session, Auth::user());
+        }
+
+        return redirect()->route('instructor.sessions.show', $session)
+            ->with('success', "Session ended and report #{$report->id} was generated.");
     }
 
     public function live(ClassSession $session)
@@ -130,6 +145,8 @@ class SessionController extends Controller
 
     public function destroy(ClassSession $session)
     {
+        $this->authorizeSession($session);
+
         $session->delete();
 
         return redirect()

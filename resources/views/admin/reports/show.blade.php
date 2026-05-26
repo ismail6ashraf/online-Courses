@@ -16,6 +16,53 @@
 
 @php $data = $report->data; @endphp
 
+@if(isset($data['summary']))
+<div class="card mb-3">
+    <div class="card-header bg-transparent">
+        <h6 class="mb-0">Session Summary</h6>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-sm-6 col-lg-3">
+                <div class="p-3 bg-light rounded">
+                    <div class="small text-muted">Overall Status</div>
+                    <div class="fw-bold text-capitalize">{{ str_replace('_', ' ', $data['summary']['overall_status'] ?? 'n/a') }}</div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="p-3 bg-light rounded">
+                    <div class="small text-muted">Attendance Rate</div>
+                    <div class="fw-bold">{{ $data['summary']['attendance_rate'] ?? 0 }}%</div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="p-3 bg-light rounded">
+                    <div class="small text-muted">Dead Air</div>
+                    <div class="fw-bold">{{ $data['summary']['total_dead_air_seconds'] ?? 0 }}s</div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+                <div class="p-3 bg-light rounded">
+                    <div class="small text-muted">Critical Alerts</div>
+                    <div class="fw-bold">{{ $data['summary']['critical_alerts'] ?? 0 }}</div>
+                </div>
+            </div>
+        </div>
+
+        @if(!empty($data['recommendations']))
+            <div class="mt-3">
+                <div class="small text-muted mb-2">Recommendations</div>
+                <ul class="mb-0">
+                    @foreach($data['recommendations'] as $recommendation)
+                        <li>{{ $recommendation }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+    </div>
+</div>
+@endif
+
 <div class="row g-3">
     @if(isset($data['sessions']))
     <div class="col-md-3">

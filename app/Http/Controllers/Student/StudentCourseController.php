@@ -37,4 +37,24 @@ class StudentCourseController extends Controller
 
         return view('student.courses.show', compact('course'));
     }
+
+    public function details(Course $course)
+    {
+        $isEnrolled = auth()->user()
+            ->enrolledCourses()
+            ->where('courses.id', $course->id)
+            ->exists();
+
+        $sessions = $course->sessions()
+            ->where('status', '!=', 'cancelled')
+            ->orderBy('scheduled_at')
+            ->get();
+
+        $assessments = $course->assessments()
+            ->where('status', 'active')
+            ->latest()
+            ->get();
+
+        return view('student.courses.details', compact('course', 'sessions', 'assessments', 'isEnrolled'));
+    }
 }

@@ -33,6 +33,32 @@
                         <textarea name="description" class="form-control" rows="2">{{ old('description') }}</textarea>
                     </div>
 
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Course</label>
+                            <select name="course_id" class="form-select">
+                                <option value="">Select course</option>
+                                @foreach($courses as $course)
+                                    <option value="{{ $course->id }}" {{ (string) old('course_id') === (string) $course->id ? 'selected' : '' }}>
+                                        {{ $course->title }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="form-text">Students enrolled in this course will receive a notification.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-medium">Related Session</label>
+                            <select name="class_session_id" class="form-select">
+                                <option value="">No session</option>
+                                @foreach($sessions as $session)
+                                    <option value="{{ $session->id }}" {{ (string) old('class_session_id') === (string) $session->id ? 'selected' : '' }}>
+                                        {{ $session->title }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
                     <hr>
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h6 class="mb-0">Assessment Fields</h6>

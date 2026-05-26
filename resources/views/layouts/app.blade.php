@@ -183,9 +183,81 @@
                     <h6 class="page-title">@yield('page-title', 'Dashboard')</h6>
                 </div>
                 <div class="d-flex align-items-center gap-3">
-                    @php $unreadAlerts = \App\Models\Alert::where('target_user_id', auth()->id())->where('is_read', false)->count(); @endphp
-                    @if($unreadAlerts > 0)
-                        <span class="badge bg-danger rounded-pill">{{ $unreadAlerts }} alerts</span>
+                    @php
+                        $topbarUnreadAlerts = \App\Models\Alert::where('target_user_id', auth()->id())
+                            ->where('is_read', false)
+                            ->count();
+                        $topbarAlerts = \App\Models\Alert::where('target_user_id', auth()->id())
+                            ->latest()
+                            ->take(5)
+                            ->get();
+                    @endphp
+
+                    @if(auth()->user()->isStudent())
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-light position-relative d-flex align-items-center justify-content-center"
+                                style="width:38px;height:38px"
+                                data-bs-toggle="dropdown"
+                                aria-label="Notifications">
+                                <i class="bi bi-bell fs-5"></i>
+                                @if($topbarUnreadAlerts > 0)
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                        style="font-size:.65rem">
+                                        {{ $topbarUnreadAlerts > 9 ? '9+' : $topbarUnreadAlerts }}
+                                    </span>
+                                @endif
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end p-0 shadow-sm" style="width:340px;max-width:90vw">
+                                <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                                    <div>
+                                        <div class="fw-semibold small">Notifications</div>
+                                        <div class="text-muted small">{{ $topbarUnreadAlerts }} unread</div>
+                                    </div>
+                                    @if($topbarUnreadAlerts > 0)
+                                        <form action="{{ route('student.notifications.read') }}" method="POST">
+                                            @csrf
+                                            <button class="btn btn-link btn-sm p-0 text-decoration-none">Mark all read</button>
+                                        </form>
+                                    @endif
+                                </div>
+                                <div style="max-height:360px;overflow-y:auto">
+                                    @forelse($topbarAlerts as $alert)
+                                        @php
+                                            $alertUrl = ($alert->type === 'assessment_task' && !empty($alert->context['assessment_id']))
+                                                ? route('student.assessments.show', $alert->context['assessment_id'])
+                                                : null;
+                                        @endphp
+                                        <div class="dropdown-item-text border-bottom p-3 {{ $alert->is_read ? '' : 'bg-light' }}">
+                                            <div class="d-flex gap-2">
+                                                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0
+                                                    {{ $alert->type === 'assessment_task' ? 'bg-primary-subtle text-primary' : 'bg-success-subtle text-success' }}"
+                                                    style="width:34px;height:34px">
+                                                    <i class="bi {{ $alert->type === 'assessment_task' ? 'bi-clipboard-check' : 'bi-check-circle' }}"></i>
+                                                </div>
+                                                <div class="min-w-0">
+                                                    @if($alertUrl)
+                                                        <a href="{{ $alertUrl }}" class="fw-semibold small text-decoration-none">
+                                                            {{ $alert->title }}
+                                                        </a>
+                                                    @else
+                                                        <div class="fw-semibold small">{{ $alert->title }}</div>
+                                                    @endif
+                                                    <div class="text-muted small" style="white-space:normal">{{ $alert->message }}</div>
+                                                    <div class="text-muted small mt-1">{{ $alert->created_at->diffForHumans() }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @empty
+                                        <div class="p-4 text-center text-muted small">
+                                            <i class="bi bi-bell-slash d-block fs-4 mb-2"></i>
+                                            No notifications yet
+                                        </div>
+                                    @endforelse
+                                </div>
+                            </div>
+                        </div>
+                    @elseif($topbarUnreadAlerts > 0)
+                        <span class="badge bg-danger rounded-pill">{{ $topbarUnreadAlerts }} alerts</span>
                     @endif
                     <div class="dropdown">
                         <button class="btn btn-sm btn-light dropdown-toggle d-flex align-items-center gap-2"

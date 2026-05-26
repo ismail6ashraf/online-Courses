@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\AttendanceLog;
 
 class ClassSession extends Model
 {
@@ -40,5 +41,5 @@ class ClassSession extends Model
     public function instructorTasks() { return $this->hasMany(InstructorTask::class); }
 
     public function isLive(): bool { return $this->status === 'live'; }
-    public function attendances() { return $this->hasMany(Attendance::class, 'session_id'); }
+    public function attendances() { return $this->hasMany(AttendanceLog::class, 'class_session_id'); }
 }

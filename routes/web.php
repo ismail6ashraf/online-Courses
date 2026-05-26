@@ -111,4 +111,16 @@ Route::middleware(['auth', 'role:student'])
 
         Route::get('/courses/{course}', [StudentCourseController::class, 'show'])
             ->name('courses.show');
+
+        Route::get('/courses/{course}/details', [StudentCourseController::class, 'details'])
+            ->name('courses.details');
+
+        Route::get('/assessments/{assessment}', [Student\AssessmentController::class, 'show'])
+            ->name('assessments.show');
+
+        Route::post('/assessments/{assessment}', [Student\AssessmentController::class, 'submit'])
+            ->name('assessments.submit');
+
+        Route::post('/notifications/read', [Student\NotificationController::class, 'markAllRead'])
+            ->name('notifications.read');
     });

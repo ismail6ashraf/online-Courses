@@ -141,7 +141,41 @@ class ReportGeneratorService
      */
     public function generateSessionReport(ClassSession $session, User $generatedBy): Report
     {
+        $session->loadMissing(['course.students', 'instructor']);
+
+        $attendanceLogs = AttendanceLog::where('class_session_id', $session->id)->with('user')->get();
+        $behaviorIncidents = BehaviorIncident::where('class_session_id', $session->id)->with('user')->get();
+        $deadAirLogs = DeadAirLog::where('class_session_id', $session->id)->get();
+        $dataLeakageIncidents = DataLeakageIncident::where('class_session_id', $session->id)->with('user')->get();
+        $alerts = Alert::where('class_session_id', $session->id)->get();
+        $expectedStudents = $session->course?->students?->count() ?? 0;
+        $presentStudents = $attendanceLogs->whereIn('status', ['present', 'left_early', 'late'])->count();
+        $attendanceRate = $expectedStudents > 0
+            ? round(($presentStudents / $expectedStudents) * 100, 1)
+            : 0.0;
+        $negativeSpeechCount = $behaviorIncidents->where('type', 'negative_speech')->count();
+        $positiveSpeechCount = $behaviorIncidents->where('type', 'positive_speech')->count();
+        $totalDeadAirSeconds = (int) $deadAirLogs->sum('duration_seconds');
+        $criticalAlerts = $alerts->where('severity', 'critical')->count();
+
         $data = [
+            'summary' => [
+                'attendance_rate'        => $attendanceRate,
+                'expected_students'      => $expectedStudents,
+                'present_students'       => $presentStudents,
+                'total_dead_air_seconds' => $totalDeadAirSeconds,
+                'negative_speech_count'  => $negativeSpeechCount,
+                'positive_speech_count'  => $positiveSpeechCount,
+                'data_leakage_count'     => $dataLeakageIncidents->count(),
+                'critical_alerts'        => $criticalAlerts,
+                'overall_status'         => $this->resolveSessionHealth(
+                    $attendanceRate,
+                    $totalDeadAirSeconds,
+                    $negativeSpeechCount,
+                    $dataLeakageIncidents->count(),
+                    $criticalAlerts
+                ),
+            ],
             'session' => [
                 'id'         => $session->id,
                 'title'      => $session->title,
@@ -152,26 +186,56 @@ class ReportGeneratorService
                 'ended_at'   => $session->ended_at?->toDateTimeString(),
                 'duration'   => $session->duration_minutes,
             ],
-            'attendance' => AttendanceLog::where('class_session_id', $session->id)
-                ->selectRaw('status, count(*) as count')
-                ->groupBy('status')
-                ->pluck('count', 'status')
-                ->toArray(),
+            'attendance' => [
+                'by_status' => $attendanceLogs->countBy('status')->toArray(),
+                'rate'      => $attendanceRate,
+                'students'  => $attendanceLogs->map(fn ($attendance) => [
+                    'student'          => $attendance->user?->name,
+                    'status'           => $attendance->status,
+                    'joined_at'        => $attendance->joined_at?->toDateTimeString(),
+                    'left_at'          => $attendance->left_at?->toDateTimeString(),
+                    'duration_minutes' => $attendance->duration_minutes,
+                ])->values()->toArray(),
+            ],
             'behavior' => [
-                'negative' => BehaviorIncident::where('class_session_id', $session->id)
-                    ->where('type', 'negative_speech')->count(),
-                'positive' => BehaviorIncident::where('class_session_id', $session->id)
-                    ->where('type', 'positive_speech')->count(),
-                'incidents' => BehaviorIncident::where('class_session_id', $session->id)
-                    ->with('user')->get()->toArray(),
+                'negative'  => $negativeSpeechCount,
+                'positive'  => $positiveSpeechCount,
+                'incidents' => $behaviorIncidents->map(fn ($incident) => [
+                    'user'             => $incident->user?->name,
+                    'type'             => $incident->type,
+                    'detected_phrase'  => $incident->detected_phrase,
+                    'sentiment_score'  => $incident->sentiment_score,
+                    'timestamp_seconds'=> $incident->timestamp_seconds,
+                ])->values()->toArray(),
             ],
             'dead_air' => [
-                'incidents'     => DeadAirLog::where('class_session_id', $session->id)->get()->toArray(),
-                'total_seconds' => $session->dead_air_seconds,
+                'incidents'        => $deadAirLogs->toArray(),
+                'total_seconds'    => $totalDeadAirSeconds,
+                'longest_incident' => (int) $deadAirLogs->max('duration_seconds'),
             ],
-            'data_leakage' => DataLeakageIncident::where('class_session_id', $session->id)
-                ->with('user')->get()->toArray(),
-            'alerts' => Alert::where('class_session_id', $session->id)->count(),
+            'data_leakage' => [
+                'total'      => $dataLeakageIncidents->count(),
+                'by_channel' => $dataLeakageIncidents->countBy('channel')->toArray(),
+                'by_type'    => $dataLeakageIncidents->countBy('leakage_type')->toArray(),
+                'incidents'  => $dataLeakageIncidents->map(fn ($incident) => [
+                    'user'         => $incident->user?->name,
+                    'channel'      => $incident->channel,
+                    'leakage_type' => $incident->leakage_type,
+                ])->values()->toArray(),
+            ],
+            'alerts' => [
+                'total'       => $alerts->count(),
+                'critical'    => $criticalAlerts,
+                'warning'     => $alerts->where('severity', 'warning')->count(),
+                'by_type'     => $alerts->countBy('type')->toArray(),
+            ],
+            'recommendations' => $this->buildSessionRecommendations(
+                $attendanceRate,
+                $totalDeadAirSeconds,
+                $negativeSpeechCount,
+                $dataLeakageIncidents->count(),
+                $criticalAlerts
+            ),
         ];
 
         return Report::create([
@@ -185,6 +249,60 @@ class ReportGeneratorService
             'data'             => $data,
             'status'           => 'ready',
         ]);
+    }
+
+    private function resolveSessionHealth(
+        float $attendanceRate,
+        int $deadAirSeconds,
+        int $negativeSpeechCount,
+        int $dataLeakageCount,
+        int $criticalAlerts
+    ): string {
+        if ($criticalAlerts > 0 || $dataLeakageCount > 0 || $negativeSpeechCount >= 3 || $deadAirSeconds >= 180) {
+            return 'needs_review';
+        }
+
+        if ($attendanceRate > 0 && $attendanceRate < 60) {
+            return 'low_attendance';
+        }
+
+        if ($deadAirSeconds >= 60 || $negativeSpeechCount > 0) {
+            return 'watch';
+        }
+
+        return 'healthy';
+    }
+
+    private function buildSessionRecommendations(
+        float $attendanceRate,
+        int $deadAirSeconds,
+        int $negativeSpeechCount,
+        int $dataLeakageCount,
+        int $criticalAlerts
+    ): array {
+        $recommendations = [];
+
+        if ($attendanceRate > 0 && $attendanceRate < 70) {
+            $recommendations[] = 'Follow up with absent or low-attendance students before the next session.';
+        }
+
+        if ($deadAirSeconds >= 60) {
+            $recommendations[] = 'Review the session recording around silence periods and confirm the meeting audio setup.';
+        }
+
+        if ($negativeSpeechCount > 0) {
+            $recommendations[] = 'Review flagged speech incidents and coach the instructor on constructive classroom language.';
+        }
+
+        if ($dataLeakageCount > 0) {
+            $recommendations[] = 'Review data leakage incidents and remind participants not to share private contact details.';
+        }
+
+        if ($criticalAlerts > 0) {
+            $recommendations[] = 'Prioritize this report for admin review because it contains critical alerts.';
+        }
+
+        return $recommendations ?: ['No immediate follow-up needed.'];
     }
 
     private function collectPeriodData(Carbon $start, Carbon $end): array

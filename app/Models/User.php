@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\AttendanceLog;
 
 class User extends Authenticatable
 {
@@ -40,5 +41,5 @@ class User extends Authenticatable
     public function behaviorIncidents()   { return $this->hasMany(BehaviorIncident::class); }
     public function dataLeakageIncidents(){ return $this->hasMany(DataLeakageIncident::class); }
     public function reports()             { return $this->hasMany(Report::class, 'generated_by'); }
-    public function attendances(){ return $this->hasMany(Attendance::class, 'student_id'); }
+    public function attendances(){ return $this->hasMany(AttendanceLog::class, 'user_id'); }
 }
