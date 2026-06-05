@@ -7,6 +7,10 @@ use App\Http\Controllers\Student;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Instructor\CourseController;
 use App\Http\Controllers\Student\StudentCourseController;
+use App\Http\Controllers\PricingController;
+
+
+
 
 // Guest routes
 Route::middleware('guest')->group(function () {
@@ -40,6 +44,20 @@ Route::get('/', function () {
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [Admin\DashboardController::class, 'index'])->name('dashboard');
 
+    Route::get('/payments', [Admin\PaymentController::class, 'index'])
+        ->name('payments.index');
+    Route::post('/payments/{payment}/approve', [Admin\PaymentController::class, 'approve'])
+        ->name('payments.approve');
+    Route::post('/payments/{payment}/reject', [Admin\PaymentController::class, 'reject'])
+        ->name('payments.reject');
+
+
+    Route::get('/payment-settings', [Admin\PaymentSettingController::class, 'edit'])
+        ->name('payment-settings.edit');
+    Route::put('/payment-settings', [Admin\PaymentSettingController::class, 'update'])
+        ->name('payment-settings.update');
+
+
     Route::get('/users', [Admin\UserController::class, 'index'])->name('users.index');
     Route::get('/users/create', [Admin\UserController::class, 'create'])->name('users.create');
     Route::post('/users', [Admin\UserController::class, 'store'])->name('users.store');
@@ -64,32 +82,53 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 });
 
 // ─── Instructor Routes ────────────────────────────────────────────────────────
-Route::middleware(['auth', 'role:instructor'])->prefix('instructor')->name('instructor.')->group(function () {
-    Route::get('/dashboard', [Instructor\DashboardController::class, 'index'])->name('dashboard');
+Route::middleware(['auth', 'role:instructor'])
+    ->prefix('instructor')
+    ->name('instructor.')
+    ->group(function () {
 
-    Route::get('/sessions', [Instructor\SessionController::class, 'index'])->name('sessions.index');
-    Route::get('/sessions/create', [Instructor\SessionController::class, 'create'])->name('sessions.create');
-    Route::post('/sessions', [Instructor\SessionController::class, 'store'])->name('sessions.store');
-    Route::get('/sessions/{session}', [Instructor\SessionController::class, 'show'])->name('sessions.show');
-    Route::get('/sessions/{session}/edit', [Instructor\SessionController::class, 'edit'])->name('sessions.edit');
-    Route::put('/sessions/{session}', [Instructor\SessionController::class, 'update'])->name('sessions.update');
-    Route::post('/sessions/{session}/start', [Instructor\SessionController::class, 'start'])->name('sessions.start');
-    Route::post('/sessions/{session}/end', [Instructor\SessionController::class, 'end'])->name('sessions.end');
-    Route::get('/sessions/{session}/live', [Instructor\SessionController::class, 'live'])->name('sessions.live');
-    Route::delete('/sessions/{session}', [Instructor\SessionController::class, 'destroy'])
-        ->name('sessions.destroy');
+        Route::get('/dashboard', [Instructor\DashboardController::class, 'index'])
+            ->name('dashboard');
 
+        Route::get('/pricing', [PricingController::class, 'index'])
+            ->name('pricing');
 
-    Route::get('/assessments', [Instructor\AssessmentController::class, 'index'])->name('assessments.index');
-    Route::get('/assessments/create', [Instructor\AssessmentController::class, 'create'])->name('assessments.create');
-    Route::post('/assessments', [Instructor\AssessmentController::class, 'store'])->name('assessments.store');
-    Route::get('/assessments/{assessment}', [Instructor\AssessmentController::class, 'show'])->name('assessments.show');
-    Route::post('/assessments/{assessment}/respond', [Instructor\AssessmentController::class, 'submitResponse'])->name('assessments.respond');
+        Route::post('/pricing/{plan}/subscribe', [PricingController::class, 'subscribe'])
+            ->name('pricing.subscribe');
 
-    Route::get('/tasks', [Instructor\TaskController::class, 'index'])->name('tasks.index');
-    Route::patch('/tasks/{task}/status', [Instructor\TaskController::class, 'updateStatus'])->name('tasks.status');
-    Route::resource('courses', CourseController::class);
-});
+        Route::get('/checkout/{plan}', [PricingController::class, 'checkout'])
+            ->name('checkout');
+
+        Route::post('/checkout/{plan}/pay', [PricingController::class, 'pay'])
+            ->name('checkout.pay');
+
+        Route::get('/sessions', [Instructor\SessionController::class, 'index'])
+            ->name('sessions.index');
+
+        Route::middleware('subscription')->group(function () {
+            Route::get('/sessions/create', [Instructor\SessionController::class, 'create'])->name('sessions.create');
+            Route::post('/sessions', [Instructor\SessionController::class, 'store'])->name('sessions.store');
+            Route::get('/sessions/{session}/edit', [Instructor\SessionController::class, 'edit'])->name('sessions.edit');
+            Route::put('/sessions/{session}', [Instructor\SessionController::class, 'update'])->name('sessions.update');
+            Route::delete('/sessions/{session}', [Instructor\SessionController::class, 'destroy'])->name('sessions.destroy');
+
+            Route::resource('courses', CourseController::class);
+        });
+
+        Route::get('/sessions/{session}', [Instructor\SessionController::class, 'show'])->name('sessions.show');
+        Route::post('/sessions/{session}/start', [Instructor\SessionController::class, 'start'])->name('sessions.start');
+        Route::post('/sessions/{session}/end', [Instructor\SessionController::class, 'end'])->name('sessions.end');
+        Route::get('/sessions/{session}/live', [Instructor\SessionController::class, 'live'])->name('sessions.live');
+
+        Route::get('/assessments', [Instructor\AssessmentController::class, 'index'])->name('assessments.index');
+        Route::get('/assessments/create', [Instructor\AssessmentController::class, 'create'])->name('assessments.create');
+        Route::post('/assessments', [Instructor\AssessmentController::class, 'store'])->name('assessments.store');
+        Route::get('/assessments/{assessment}', [Instructor\AssessmentController::class, 'show'])->name('assessments.show');
+        Route::post('/assessments/{assessment}/respond', [Instructor\AssessmentController::class, 'submitResponse'])->name('assessments.respond');
+
+        Route::get('/tasks', [Instructor\TaskController::class, 'index'])->name('tasks.index');
+        Route::patch('/tasks/{task}/status', [Instructor\TaskController::class, 'updateStatus'])->name('tasks.status');
+    });
 
 // ─── Student Routes ───────────────────────────────────────────────────────────
 Route::middleware(['auth', 'role:student'])

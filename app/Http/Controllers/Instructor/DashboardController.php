@@ -14,17 +14,25 @@ class DashboardController extends Controller
     {
         $instructor = Auth::user();
 
+        $subscription = $instructor->subscription;
+        $plan = $subscription?->plan;
+        $coursesCount = $instructor->coursesAsInstructor()->count();
+
         $stats = [
-            'total_courses'   => $instructor->coursesAsInstructor()->count(),
+            'total_courses' => $coursesCount,
+
             'upcoming_sessions' => ClassSession::where('instructor_id', $instructor->id)
                 ->where('status', 'scheduled')
                 ->where('scheduled_at', '>', now())
                 ->count(),
-            'pending_tasks'   => InstructorTask::where('instructor_id', $instructor->id)
+
+            'pending_tasks' => InstructorTask::where('instructor_id', $instructor->id)
                 ->where('status', 'pending')
                 ->count(),
-            'unread_alerts'   => Alert::where('target_user_id', $instructor->id)
-                ->where('is_read', false)->count(),
+
+            'unread_alerts' => Alert::where('target_user_id', $instructor->id)
+                ->where('is_read', false)
+                ->count(),
         ];
 
         $upcomingSessions = ClassSession::where('instructor_id', $instructor->id)
@@ -49,7 +57,13 @@ class DashboardController extends Controller
             ->get();
 
         return view('instructor.dashboard', compact(
-            'stats', 'upcomingSessions', 'pendingTasks', 'recentAlerts'
+            'stats',
+            'upcomingSessions',
+            'pendingTasks',
+            'recentAlerts',
+            'subscription',
+            'plan',
+            'coursesCount'
         ));
     }
 }

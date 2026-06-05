@@ -26,6 +26,32 @@ class CourseController extends Controller
 
     public function store(Request $request)
     {
+        $user = Auth::user();
+
+        $subscription = $user->subscription;
+
+        if (
+            !$subscription ||
+            !$subscription->isActive()
+        ) {
+            return redirect()
+                ->route('instructor.pricing')
+                ->with('error', 'You need an active subscription to create courses.');
+        }
+
+        $plan = $subscription->plan;
+
+        $currentCoursesCount = Course::where('instructor_id', $user->id)->count();
+
+        if (
+            $plan->max_courses !== null &&
+            $currentCoursesCount >= $plan->max_courses
+        ) {
+            return redirect()
+                ->route('instructor.pricing')
+                ->with('error', 'You have reached your course limit. Please upgrade your plan.');
+        }
+
         $data = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -35,7 +61,7 @@ class CourseController extends Controller
             'status' => 'required|in:active,inactive,archived',
         ]);
 
-        $data['instructor_id'] = Auth::id();
+        $data['instructor_id'] = $user->id;
 
         Course::create($data);
 
