@@ -39,6 +39,7 @@ class ClassSession extends Model
     public function alerts()      { return $this->hasMany(Alert::class); }
     public function assessments() { return $this->hasMany(Assessment::class); }
     public function instructorTasks() { return $this->hasMany(InstructorTask::class); }
+    public function reports() { return $this->hasMany(Report::class); }
 
     public function isLive(): bool { return $this->status === 'live'; }
     public function attendances() { return $this->hasMany(AttendanceLog::class, 'class_session_id'); }

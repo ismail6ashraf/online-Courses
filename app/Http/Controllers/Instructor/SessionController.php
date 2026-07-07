@@ -62,7 +62,12 @@ class SessionController extends Controller
             'instructorTasks',
         ]);
 
-        return view('instructor.sessions.show', compact('session'));
+        $report = Report::where('type', 'session')
+            ->where('class_session_id', $session->id)
+            ->latest()
+            ->first();
+
+        return view('instructor.sessions.show', compact('session', 'report'));
     }
 
     public function edit(ClassSession $session)
@@ -136,6 +141,24 @@ class SessionController extends Controller
         abort_unless($session->isLive(), 404);
 
         return view('instructor.sessions.live', compact('session'));
+    }
+
+    public function report(ClassSession $session)
+    {
+        $this->authorizeSession($session);
+
+        $report = Report::where('type', 'session')
+            ->where('class_session_id', $session->id)
+            ->latest()
+            ->first();
+
+        if (!$report) {
+            $report = $this->reportGenerator->generateSessionReport($session, Auth::user());
+        }
+
+        $backRoute = route('instructor.sessions.show', $session);
+
+        return view('admin.reports.show', compact('report', 'backRoute'));
     }
 
     private function authorizeSession(ClassSession $session): void

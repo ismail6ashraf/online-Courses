@@ -55,7 +55,9 @@ class User extends Authenticatable
     }
     public function enrolledCourses()
     {
-        return $this->belongsToMany(Course::class, 'course_students', 'student_id');
+        return $this->belongsToMany(Course::class, 'course_students', 'student_id')
+            ->withPivot(['status', 'enrolled_at'])
+            ->withTimestamps();
     }
     public function classSessionsAsInstructor()
     {
@@ -92,6 +94,10 @@ class User extends Authenticatable
     public function subscription()
     {
         return $this->hasOne(Subscription::class);
+    }
+    public function assignmentSubmissions()
+    {
+        return $this->hasMany(AssignmentSubmission::class, 'student_id');
     }
 
     public function hasActiveSubscription()

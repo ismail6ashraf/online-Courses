@@ -90,6 +90,9 @@ Route::middleware(['auth', 'role:instructor'])
         Route::get('/dashboard', [Instructor\DashboardController::class, 'index'])
             ->name('dashboard');
 
+        Route::get('/calendar', [Instructor\CalendarController::class, 'index'])
+            ->name('calendar');
+
         Route::get('/pricing', [PricingController::class, 'index'])
             ->name('pricing');
 
@@ -112,10 +115,19 @@ Route::middleware(['auth', 'role:instructor'])
             Route::put('/sessions/{session}', [Instructor\SessionController::class, 'update'])->name('sessions.update');
             Route::delete('/sessions/{session}', [Instructor\SessionController::class, 'destroy'])->name('sessions.destroy');
 
-            Route::resource('courses', CourseController::class);
+            Route::post('/courses/{course}/materials', [CourseController::class, 'storeMaterial'])->name('courses.materials.store');
+            Route::delete('/courses/{course}/materials/{material}', [CourseController::class, 'destroyMaterial'])->name('courses.materials.destroy');
+            Route::post('/courses/{course}/assignments', [CourseController::class, 'storeAssignment'])->name('courses.assignments.store');
+            Route::delete('/courses/{course}/assignments/{assignment}', [CourseController::class, 'destroyAssignment'])->name('courses.assignments.destroy');
+            Route::patch('/courses/{course}/assignments/{assignment}/submissions/{submission}', [CourseController::class, 'gradeSubmission'])->name('courses.assignments.submissions.grade');
+            Route::resource('courses', CourseController::class)->only(['create', 'store']);
         });
 
+        Route::patch('/courses/{course}/students/{student}/complete', [CourseController::class, 'completeStudent'])->name('courses.students.complete');
+        Route::resource('courses', CourseController::class)->except(['create', 'store']);
+
         Route::get('/sessions/{session}', [Instructor\SessionController::class, 'show'])->name('sessions.show');
+        Route::get('/sessions/{session}/report', [Instructor\SessionController::class, 'report'])->name('sessions.report');
         Route::post('/sessions/{session}/start', [Instructor\SessionController::class, 'start'])->name('sessions.start');
         Route::post('/sessions/{session}/end', [Instructor\SessionController::class, 'end'])->name('sessions.end');
         Route::get('/sessions/{session}/live', [Instructor\SessionController::class, 'live'])->name('sessions.live');
@@ -142,6 +154,9 @@ Route::middleware(['auth', 'role:student'])
         )
             ->name('dashboard');
 
+        Route::get('/calendar', [Student\CalendarController::class, 'index'])
+            ->name('calendar');
+
         Route::post(
             '/courses/{course}/enroll',
             [StudentCourseController::class, 'enroll']
@@ -153,6 +168,12 @@ Route::middleware(['auth', 'role:student'])
 
         Route::get('/courses/{course}/details', [StudentCourseController::class, 'details'])
             ->name('courses.details');
+
+        Route::get('/courses/{course}/certificate', [StudentCourseController::class, 'certificate'])
+            ->name('courses.certificate');
+
+        Route::post('/courses/{course}/assignments/{assignment}', [StudentCourseController::class, 'submitAssignment'])
+            ->name('courses.assignments.submit');
 
         Route::get('/assessments/{assessment}', [Student\AssessmentController::class, 'show'])
             ->name('assessments.show');

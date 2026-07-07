@@ -4,6 +4,11 @@
     <i class="bi bi-speedometer2"></i> Dashboard
 </a>
 
+<a class="nav-link {{ request()->routeIs('instructor.calendar') ? 'active' : '' }}"
+    href="{{ route('instructor.calendar') }}">
+    <i class="bi bi-calendar3"></i> Calendar
+</a>
+
 <span class="nav-section">Teaching</span>
 <a class="nav-link {{ request()->routeIs('instructor.sessions.*') ? 'active' : '' }}"
     href="{{ route('instructor.sessions.index') }}">

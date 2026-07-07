@@ -65,15 +65,15 @@
                         </div>
                     </div>
 
-                    <form action="{{ route('student.courses.enroll', $course->id) }}" method="POST">
-                        @csrf
-                        <button class="btn btn-sm btn-primary">
-                            Enroll
-                        </button>
-                        <button class="btn btn-sm btn-primary">
-                            <a style="text-decoration: none; color: white;" href="{{ route('student.courses.details', $course->id) }}">View Details</a>
-                        </button>
-                    </form>
+                    <div class="d-flex gap-2">
+                        <form action="{{ route('student.courses.enroll', $course->id) }}" method="POST">
+                            @csrf
+                            <button class="btn btn-sm btn-primary">Enroll</button>
+                        </form>
+                        <a class="btn btn-sm btn-outline-primary" href="{{ route('student.courses.details', $course->id) }}">
+                            View Details
+                        </a>
+                    </div>
                 </div>
             @empty
                 <div class="list-group-item text-center text-muted py-4">

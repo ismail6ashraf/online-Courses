@@ -81,6 +81,53 @@
 </div>
 
 <div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card p-3 h-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="small text-muted">Active Courses</div>
+                    <div class="fs-4 fw-bold">{{ $stats['active_courses'] }}</div>
+                </div>
+                <i class="bi bi-book text-primary fs-3"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card p-3 h-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="small text-muted">Active Subscriptions</div>
+                    <div class="fs-4 fw-bold">{{ $stats['active_subscriptions'] }}</div>
+                </div>
+                <i class="bi bi-award text-success fs-3"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card p-3 h-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="small text-muted">Pending Payments</div>
+                    <div class="fs-4 fw-bold">{{ $stats['pending_payments'] }}</div>
+                </div>
+                <i class="bi bi-hourglass-split text-warning fs-3"></i>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card p-3 h-100">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <div class="small text-muted">Approved Revenue</div>
+                    <div class="fs-4 fw-bold">${{ number_format($stats['approved_revenue'], 2) }}</div>
+                </div>
+                <i class="bi bi-cash-coin text-success fs-3"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
     {{-- Weekly Chart --}}
     <div class="col-lg-7">
         <div class="card h-100">
@@ -93,8 +140,19 @@
         </div>
     </div>
 
-    {{-- Recent Behavior Incidents --}}
     <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-header border-0 bg-transparent pt-3">
+                <h6 class="mb-0 fw-semibold">Session Status Mix</h6>
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <canvas id="statusChart" height="210"></canvas>
+            </div>
+        </div>
+    </div>
+
+    {{-- Recent Behavior Incidents --}}
+    <div class="col-lg-12">
         <div class="card h-100">
             <div class="card-header border-0 bg-transparent pt-3 d-flex justify-content-between">
                 <h6 class="mb-0 fw-semibold">Recent Behavior Incidents</h6>
@@ -198,6 +256,24 @@ new Chart(ctx, {
         responsive: true,
         plugins: { legend: { position: 'top' } },
         scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+});
+
+const statusCtx = document.getElementById('statusChart');
+new Chart(statusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: {!! json_encode($statusData['labels']) !!},
+        datasets: [{
+            data: {!! json_encode($statusData['values']) !!},
+            backgroundColor: ['#3b82f6', '#ef4444', '#10b981', '#94a3b8'],
+            borderWidth: 0,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom' } },
+        cutout: '65%',
     }
 });
 </script>

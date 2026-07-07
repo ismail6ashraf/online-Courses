@@ -28,7 +28,9 @@ class Course extends Model
     }
     public function students()
     {
-        return $this->belongsToMany(User::class, 'course_students', 'course_id', 'student_id');
+        return $this->belongsToMany(User::class, 'course_students', 'course_id', 'student_id')
+            ->withPivot(['status', 'enrolled_at'])
+            ->withTimestamps();
     }
     public function sessions()
     {
@@ -37,5 +39,13 @@ class Course extends Model
     public function assessments()
     {
         return $this->hasMany(Assessment::class);
+    }
+    public function materials()
+    {
+        return $this->hasMany(CourseMaterial::class);
+    }
+    public function assignments()
+    {
+        return $this->hasMany(CourseAssignment::class);
     }
 }

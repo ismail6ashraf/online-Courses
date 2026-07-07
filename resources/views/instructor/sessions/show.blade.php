@@ -20,6 +20,9 @@
                     <i class="bi bi-circle-fill me-1"></i>Go Live
                 </a>
             @endif
+            <a href="{{ route('instructor.sessions.report', $session) }}" class="btn btn-sm btn-outline-primary">
+                <i class="bi bi-file-earmark-bar-graph me-1"></i>{{ $report ? 'View Report' : 'Generate Report' }}
+            </a>
             <a href="{{ route('instructor.sessions.edit', $session) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
             <form action="{{ route('instructor.sessions.destroy', $session) }}" method="POST" class="d-inline"
                 onsubmit="return confirm('Delete this session?')">

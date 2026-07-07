@@ -110,6 +110,53 @@
         </div>
     </div>
 
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card p-3 h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="small text-muted">Total Students</div>
+                        <div class="fs-4 fw-bold">{{ $stats['total_students'] }}</div>
+                    </div>
+                    <i class="bi bi-people text-primary fs-3"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card p-3 h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="small text-muted">Materials</div>
+                        <div class="fs-4 fw-bold">{{ $stats['course_materials'] }}</div>
+                    </div>
+                    <i class="bi bi-folder2-open text-info fs-3"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card p-3 h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="small text-muted">Assignments</div>
+                        <div class="fs-4 fw-bold">{{ $stats['published_assignments'] }}</div>
+                    </div>
+                    <i class="bi bi-list-check text-warning fs-3"></i>
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-3">
+            <div class="card p-3 h-100">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="small text-muted">Submissions</div>
+                        <div class="fs-4 fw-bold">{{ $stats['assignment_submissions'] }}</div>
+                    </div>
+                    <i class="bi bi-inbox text-success fs-3"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="row g-3">
         {{-- Upcoming Sessions --}}
         <div class="col-lg-6">
@@ -195,4 +242,65 @@
             </div>
         </div>
     </div>
+
+    <div class="row g-3 mt-1">
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-header bg-transparent border-0 pt-3">
+                    <h6 class="mb-0 fw-semibold">Session Mix</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="instructorSessionMix" height="220"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-header bg-transparent border-0 pt-3">
+                    <h6 class="mb-0 fw-semibold">Recent Assignment Submissions</h6>
+                </div>
+                <div class="list-group list-group-flush">
+                    @forelse($recentSubmissions as $submission)
+                        <div class="list-group-item d-flex justify-content-between align-items-start gap-3">
+                            <div class="min-w-0">
+                                <div class="fw-medium small">{{ $submission->assignment->title ?? 'Assignment' }}</div>
+                                <div class="text-muted small">
+                                    {{ $submission->student->name ?? 'Unknown student' }}
+                                    @if($submission->assignment?->course)
+                                        · {{ $submission->assignment->course->title }}
+                                    @endif
+                                </div>
+                            </div>
+                            <span class="text-muted small flex-shrink-0">{{ $submission->submitted_at?->diffForHumans() }}</span>
+                        </div>
+                    @empty
+                        <div class="list-group-item text-center text-muted small py-4">No submissions yet</div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
+
+@push('scripts')
+<script>
+const instructorSessionMix = document.getElementById('instructorSessionMix');
+new Chart(instructorSessionMix, {
+    type: 'doughnut',
+    data: {
+        labels: {!! json_encode($sessionMix['labels']) !!},
+        datasets: [{
+            data: {!! json_encode($sessionMix['values']) !!},
+            backgroundColor: ['#3b82f6', '#ef4444', '#10b981', '#94a3b8'],
+            borderWidth: 0,
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom' } },
+        cutout: '65%',
+    }
+});
+</script>
+@endpush

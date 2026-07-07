@@ -60,6 +60,10 @@
 
                     {{-- الأزرار --}}
                     <div class="d-flex align-items-center gap-2 ms-3 flex-shrink-0">
+                        <a href="{{ route('instructor.courses.show', $course->id) }}"
+                            class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1">
+                            <i class="bi bi-eye"></i> Manage
+                        </a>
                         <a href="{{ route('instructor.courses.edit', $course->id) }}"
                             class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1">
                             <i class="bi bi-pencil"></i> Edit
